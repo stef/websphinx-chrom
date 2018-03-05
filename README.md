@@ -1,17 +1,13 @@
-libdecaf-based sphinx password storage implementation
+# WebSphinx Firefox addon
 
-sphinx: a password *S*tore that *P*erfectly *H*ides from *I*tself
-(*N*o *X*aggeration)
+SPHINX: a password **S**tore that **P**erfectly **H**ides from **I**tself
+(**N**o **X**aggeration)
 
-pitchforked sphinx is a cryptographic password storage as described in
+SPHINX is a cryptographic password storage as described in
 https://eprint.iacr.org/2015/1099
 
-and as presented by the Levchin Prize winner 2018 Hugo Krawczyk on
+And as presented by the Levchin Prize winner 2018 Hugo Krawczyk on
 Real World Crypto https://www.youtube.com/watch?v=px8hiyf81iM
-
-pitchforked sphinx comes with variety of interfaces: a library, a
-python wrapper around that library, a network server/client written in
-python and simple command-line binaries.
 
 ## What is this thing?
 
@@ -41,179 +37,39 @@ controlling your password store learns nothing about your master nor
 your individual passwords. Also even if your strong password leaks,
 it's unique and cannot be used to login to other sites or services.
 
-## Installing
+## Usage
 
-Install `libsodium` using your operating system provided package
-management. And if you use any of the python goodies you need to
-install also `pysodium` using either your OS package manager or pip.
+WebSphinx tries to automatically figure out what you want to do: login, create
+a new account or change a password. It tries to figure this out by counting the
+number of password input fields that are seen on the page. If this fails then
+you can manually insert the password by clicking on the field where you want
+the password inserted and on the WebSphinx popup click on **Insert Password**.
 
-Building everything should be quite simple afterwards:
+If there is a text input field with a username already filled in, then it will
+try to find a password for that user to login or change, or create a password
+for this user if there is no such user yet associated with the current site by
+the password storage. If there is no user to be found in a text field, then you
+can enter the user in the WebSphinx popup, or you can select it from a list of
+users that the password storage knows about.
 
-```
-git submodule init
-make
-```
+## Installation
 
-## Library
+Currently websphinx is not in the Chrome Web Store, if you want to install itt
+follow [these steps](https://stackoverflow.com/questions/24577024/install-chrome-extension-not-in-the-store) with the files in the websphinx directory in this repository - there is no crx file and no need to unpack it thus.
 
-Pitchforked sphinx builds a library, which you can use to build your
-own password manager either in C/C++ or any other language that can
-bind to this library. The library also contains an experimental
-version of the PKI-free PAKE protocol from page 18 of the paper.
+The WebSphinx extension requires the installation of a native messaging host. If you are on Linux or MacOS you need [pwdsphinx](https://github.com/stef/pwdsphinx), if you are on Windows you need [winsphinx](https://github.com/stef/winsphinx).
 
-The Library exposes the following 3 functions for the FK-PTR protocol
-(the password storage):
+The windows installer should take care of everything. But if you are on Linux/BSD/MacOS you need to change *%PATH%* in *websphinx.json* so it refers to *websphinx.py* which came with pwdsphinx.
 
-```
-void challenge(const uint8_t *pwd, const size_t p_len, uint8_t *bfac, uint8_t *chal);
-```
- * pwd, p_len: are input params, containing the master password and its length
- * bfac: is an output param, it's a pointer to an array of
-   `DECAF_255_SCALAR_BYTES` (32) bytes - the blinding factor
- * chal: is an output param, it's a pointer to an array of
-   `DECAF_255_SER_BYTES` (32) bytes - the challenge
+Copy *websphinx.json*, depending on your browser to finish the installation:
 
-```
-int respond(const uint8_t *chal, const uint8_t *secret, uint8_t *resp);
-```
- * chal: is an input param, it is the challenge from the challenge()
-   function, it has to be a `DECAF_255_SER_BYTES` (32) bytes big array
- * secret: is an input param, it is the "secret" contribution from the
-   device, it is a `DECAF_255_SCALAR_BYTES` (32) bytes long array
- * resp: is an output parameter, it is the result of this step, it
-   must be a `DECAF_255_SER_BYTES` (32) byte sized array
- * the function returns 1 on error, 0 on success
+- Linux/BSD
+  - Per-user: `~/.config/{google-chrome,chromium}/NativeMessagingHosts/websphinx.json`
+  - System: `/etc/{opt/chrome,chromium}/native-messaging-hosts/websphinx.json`
+- MacOS
+  - Per-user: `~/Library/Application Support/{Google/Chrome,Chromium}/NativeMessagingHosts/websphinx.json`
+  - System-wide: `/Library/{Google/Chrome,Chromium}/NativeMessagingHosts/websphinx.json`
 
-```
-int finish(const uint8_t *bfac, const uint8_t *resp, uint8_t *rwd);
-```
+## Credits
 
- * bfac: is an input param, it is the bfac output from challenge(),
-   it is array of `DECAF_255_SCALAR_BYTES` (32) bytes
- * resp: is an input parameter, it's the response from respond(), it
-   is a `DECAF_255_SER_BYTES` (32) byte sized array
- * rwd: is an output param, the derived (binary) password, it is a
-   `DECAF_255_SER_BYTES` (32) byte array
- * this function returns 1 on error, 0 on success
-
-The following functions implement the PKI-free PAKE protocol, (for the
-explanation of the various parameters please see the original paper
-and the pake-test.c example file):
-
-```
-void server_init(uint8_t *p_s, uint8_t *P_s);
-```
-
-This function is called when setting up a new server. It creates a
-long-term identity keypair. The public key needs to be shared with all
-clients, the secret key needs to be well protected and persisted for
-later usage.
-
-```
-void client_init(const uint8_t *rwd, const size_t rwd_len,
-                 const uint8_t *P_s,
-                 uint8_t k_s[32], uint8_t c[32],
-                 uint8_t C[32], uint8_t P_u[32], uint8_t m_u[32]);
-```
-
-This function needs to be run on the client when registering at a
-server. The output parameters need to be sent to the server.
-
-
-```
-void start_pake(const uint8_t *rwd, const size_t rwd_len,
-                uint8_t alpha[32], uint8_t x_u[32],
-                uint8_t X_u[32], uint8_t sp[32]);
-```
-
-The client initiates a "login" to the server with this function.
-
-```
-int server_pake(const uint8_t alpha[32], const uint8_t X_u[32],  // input params
-                const uint8_t k_s[32], const uint8_t P_u[32],
-                const uint8_t p_s[32],
-                uint8_t beta[32], uint8_t X_s[32],               // output params
-                uint8_t SK[DECAF_X25519_PUBLIC_BYTES]);
-```
-
-This function implements the "login" on the server, it reuses the data
-received when registering the user, and some other parameters that
-came out of start_pake() when the client initiated the "login". At
-successful completion SK should be a shared secret with the client. On
-error the function return 1, otherwise 0.
-
-```
-int user_pake(const uint8_t *rwd, const size_t rwd_len, const uint8_t sp[32],
-              const uint8_t x_u[32], const uint8_t beta[32], const uint8_t c[32],
-              const uint8_t C[32], const uint8_t P_u[32], const uint8_t m_u[32],
-              const uint8_t P_s[32], const uint8_t X_s[32],
-              uint8_t SK[DECAF_X25519_PUBLIC_BYTES]);
-```
-
-This function finalizes the "login" on the client side. At successful
-completion SK should be a shared secret with the server. On error the
-function return 1, otherwise 0.
-
-## Standalone Binaries
-
-pitchforked sphinx comes with very simple binaries, so you can build
-your own password storage even from shell scripts. Each step in the
-protocol is handled by one binary:
-
-### step 1 - challenge
-The following creates a challenge for a device:
-```
-echo -n "shitty master password" | ./challenge >c 2>b
-```
-The master password is passed in through standard input.
-
-The challenge is sent to standard output.
-
-A blinding factor is stored in a tempfile, the name of this file is output to
-stderr. This tempfile is needed in the last step again.
-
-### step 2 - device responds
-Pass the challenge from step 1 on standard input like:
-```
-./respond secret <c >r0
-```
-The response is sent to standard output.
-
-### step 3 - derive password
-To derive a (currently hex) password, pass the response from step 2 on standard
-input and the filename of the tempfile from step 1 like:
-```
-fname=$(cat b)
-./derive $fname <r0 >pwd0
-```
-The derived password is sent to standard output and currently is a 32 byte
-binary string.
-
-### step 4 - transform into ASCII password
-The output from step 3 is a 32 byte binary string, most passwords have some
-limitations to accept only printable - ASCII - chars. `bin2pass.py` is a python
-script which takes a binary input on standard input and transforms it into an
-ASCII password. It can have max two parameters the classes of characters
-allowed ([*u*]pper-, [*l*]ower-case letters, [*d*]igits and [*s*]ymbols) and
-the size of the password. The following examples should make this clear:
-
-Full ASCII, max size:
-```
-./bin2pass.py <pwd0
-```
-no symbols, max size:
-```
-./bin2pass.py uld <pwd0
-```
-no symbols, 8 chars:
-```
-./bin2pass.py uld 8 <pwd0
-```
-only digits, 4 chars:
-```
-./bin2pass.py d 4 <pwd0
-```
-only letters, 16 chars:
-```
-./bin2pass.py ul 16 <pwd0
-```
+Icon made by Freepik from www.flaticon.com

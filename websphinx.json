@@ -1,0 +1,9 @@
+{
+  "name": "websphinx",
+  "description": "Host for communicating with PITCHFORKed Sphinx",
+  "path": "%PATH%",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://ojbhlhidchjkmjmpeonendekpoacahni/"
+  ]
+}
