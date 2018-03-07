@@ -1,4 +1,4 @@
-# WebSphinx Firefox addon
+# WebSphinx chrome/opera addon
 
 SPHINX: a password **S**tore that **P**erfectly **H**ides from **I**tself
 (**N**o **X**aggeration)
@@ -54,12 +54,28 @@ users that the password storage knows about.
 
 ## Installation
 
-Currently websphinx is not in the Chrome Web Store, if you want to install itt
-follow [these steps](https://stackoverflow.com/questions/24577024/install-chrome-extension-not-in-the-store) with the files in the websphinx directory in this repository - there is no crx file and no need to unpack it thus.
+WebSphinx is not in the Chrome Web Store, if you want to install itt
+follow these steps (this applies to all Operating Systems):
 
-The WebSphinx extension requires the installation of a native messaging host. If you are on Linux or MacOS you need [pwdsphinx](https://github.com/stef/pwdsphinx), if you are on Windows you need [winsphinx](https://github.com/stef/winsphinx).
+ 1. Create a directory on your filesystem containing the files in the
+    websphinx directory. On windows if you used the winsphinx MSI
+    installer this directory can be found under `c:\Program Files\Sphinx 1.0\websphinx`.
+ 2. Start your browser if it is not running,
+ 3. open [chrome://extension](chrome://extension) in your browser,
+ 4. enable `Developer Mode`,
+ 5. `Load Unpacked Extension` and provide the directory created in step 1.,
+ 6. If all went well, you should get a yellowyish sphinx button.
 
-The windows installer should take care of everything. But if you are on Linux/BSD/MacOS you need to change *%PATH%* in *websphinx.json* so it refers to *websphinx.py* which came with pwdsphinx.
+The WebSphinx extension requires the installation of a native
+messaging host. If you are on Linux or MacOS you
+need [pwdsphinx](https://github.com/stef/pwdsphinx), if you are on
+Windows you need [winsphinx](https://github.com/stef/winsphinx).
+
+The windows installer should take care of everything and you should be
+done if you did the steps 1-5 above and succeeded at step 6. But if
+you are on Linux/BSD/MacOS you need to change *%PATH%* in
+*websphinx.json* so it refers to *websphinx.py* which came with
+pwdsphinx.
 
 Copy *websphinx.json*, depending on your browser to finish the installation:
 
