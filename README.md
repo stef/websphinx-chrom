@@ -77,6 +77,8 @@ you are on Linux/BSD/MacOS you need to change *%PATH%* in
 *websphinx.json* so it refers to *websphinx.py* which came with
 pwdsphinx.
 
+### Native Messaging Host Manifest
+
 Copy *websphinx.json*, depending on your browser to finish the installation:
 
 - Linux/BSD
@@ -85,6 +87,18 @@ Copy *websphinx.json*, depending on your browser to finish the installation:
 - MacOS
   - Per-user: `~/Library/Application Support/{Google/Chrome,Chromium}/NativeMessagingHosts/websphinx.json`
   - System-wide: `/Library/{Google/Chrome,Chromium}/NativeMessagingHosts/websphinx.json`
+
+### Pinentry
+
+You also need to install one of the X11 pinentry packages, choose according to your taste:
+ - either `apt-get install pinentry-qt` (or anything equivalent on your OS)
+ - or `apt-get install pinentry-gtk2`
+ - or `apt-get install pinentry-gnome3`
+ - or `apt-get install pinentry-fltk`
+
+and set the pinentry variant if it is not invoked with
+`/usr/bin/pinentry` in your sphinx config file in the `websphinx`
+section.
 
 ## Credits
 
