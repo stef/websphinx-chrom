@@ -3,5 +3,5 @@ CHROME := $(shell (which chrome || which google-chrome || which chromium || whic
 
 all: websphinx.crx
 
-websphinx.crx: $(EXT_FILES)
+websphinx.crx: $(src)
 	$(CHROME) --pack-extension=./websphinx --pack-extension-key=websphinx.pem
